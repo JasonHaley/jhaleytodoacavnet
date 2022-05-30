@@ -27,7 +27,6 @@ module resources './resources.bicep' = {
   }
 }
 
-output AZURE_COSMOS_DATABASE_NAME string = resources.outputs.AZURE_COSMOS_DATABASE_NAME
 output APPINSIGHTS_INSTRUMENTATIONKEY string = resources.outputs.APPINSIGHTS_INSTRUMENTATIONKEY
 output API_BASE_URL string = resources.outputs.API_URI
 output REACT_APP_API_BASE_URL string = resources.outputs.WEB_URI

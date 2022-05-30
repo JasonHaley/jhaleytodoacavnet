@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://azuresdkreleasepreview.blob.core.windows.net/azd/schema/azure.yaml.json
 
-name: todo-nodejs-mongo-aca
+name: todo-csharp-web-aca
 services:
   web:
     project: src/web
