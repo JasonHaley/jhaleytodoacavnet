@@ -1,25 +1,30 @@
+using Azure.Identity;
+using Microsoft.Azure.Cosmos;
+using Todo.Api;
+
+var credential = new DefaultAzureCredential();
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+builder.Services.AddSingleton<ListsRepository>();
 
+builder.Services.AddSingleton(_ => new CosmosClient(builder.Configuration["AZURE_COSMOS_ENDPOINT"], credential, new CosmosClientOptions()
+{
+    SerializerOptions = new CosmosSerializationOptions
+    {
+        PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase
+    }
+}));
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddApplicationInsightsTelemetry(builder.Configuration["APPINSIGHTS_INSTRUMENTATIONKEY"]);
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+app.UseCors(policy =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
+    policy.AllowAnyOrigin();
+    policy.AllowAnyHeader();
+    policy.AllowAnyMethod();
+});
 
 app.MapControllers();
-
 app.Run();

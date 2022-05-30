@@ -108,9 +108,6 @@ resource appServicePlan 'Microsoft.Web/serverFarms@2020-06-01' = {
   sku: {
     name: 'B1'
   }
-  properties: {
-    reserved: true
-  }
 }
 
 resource web 'Microsoft.Web/sites@2021-01-15' = {
@@ -120,10 +117,8 @@ resource web 'Microsoft.Web/sites@2021-01-15' = {
   properties: {
     serverFarmId: appServicePlan.id
     siteConfig: {
-      linuxFxVersion: 'NODE|16-lts'
       alwaysOn: true
       ftpsState: 'FtpsOnly'
-      appCommandLine: 'pm2 serve /home/site/wwwroot --no-daemon --spa'
     }
     httpsOnly: true
   }
@@ -183,7 +178,7 @@ resource api 'Microsoft.App/containerApps@2022-01-01-preview' = {
       activeRevisionsMode: 'single'
       ingress: {
         external: true
-        targetPort: 3100
+        targetPort: 80
         transport: 'auto'
       }
       secrets: [
@@ -211,59 +206,17 @@ resource api 'Microsoft.App/containerApps@2022-01-01-preview' = {
               value: appInsightsResources.outputs.APPINSIGHTS_INSTRUMENTATIONKEY
             }
             {
-              name: 'AZURE_KEY_VAULT_ENDPOINT'
-              value: keyVault.properties.vaultUri
+              name: 'AZURE_COSMOS_ENDPOINT'
+              value: cosmos.properties.documentEndpoint
+            }
+            {
+              name: 'AZURE_COSMOS_DATABASE_NAME'
+              value: cosmos::database.name
             }
           ]
         }
       ]
     }
-  }
-}
-
-resource keyVault 'Microsoft.KeyVault/vaults@2019-09-01' = {
-  name: '${name}keyvault'
-  location: location
-  properties: {
-    tenantId: subscription().tenantId
-    sku: {
-      family: 'A'
-      name: 'standard'
-    }
-    accessPolicies: []
-  }
-
-  resource cosmosconnectionstring 'secrets' = {
-    name: 'AZURE-COSMOS-CONNECTION-STRING'
-    properties: {
-      value: cosmos.listConnectionStrings().connectionStrings[0].connectionString
-    }
-  }
-}
-
-resource keyVaultAccessPolicies 'Microsoft.KeyVault/vaults/accessPolicies@2021-11-01-preview' = {
-  name: '${name}keyvault/add'
-  properties: {
-    accessPolicies: [
-      {
-        objectId: api.identity.principalId
-        permissions: {
-          secrets: [
-            'all'
-          ]
-        }
-        tenantId: subscription().tenantId
-      }
-      {
-        objectId: principalId
-        permissions: {
-          secrets: [
-            'all'
-          ]
-        }
-        tenantId: subscription().tenantId
-      }
-    ]
   }
 }
 
@@ -369,11 +322,10 @@ resource cosmos 'Microsoft.DocumentDB/databaseAccounts@2021-04-15' = {
   }
 }
 
-output AZURE_COSMOS_CONNECTION_STRING_KEY string = 'AZURE-COSMOS-CONNECTION-STRING'
 output AZURE_COSMOS_DATABASE_NAME string = cosmos::database.name
-output AZURE_KEY_VAULT_ENDPOINT string = keyVault.properties.vaultUri
 output APPINSIGHTS_INSTRUMENTATIONKEY string = appInsightsResources.outputs.APPINSIGHTS_INSTRUMENTATIONKEY
 output API_URI string = 'https://${api.properties.configuration.ingress.fqdn}'
+output WEB_URI string = 'https://${web.properties.defaultHostName}'
 output AZURE_CONTAINER_REGISTRY_NAME string = containerRegistry.name
 output AZURE_CONTAINER_REGISTRY_ENDPOINT string = containerRegistry.properties.loginServer
 output AZURE_CONTAINER_REGISTRY_SECRET_REFERENCE string = 'registry-password'

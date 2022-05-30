@@ -1,11 +1,13 @@
+# yaml-language-server: $schema=https://azuresdkreleasepreview.blob.core.windows.net/azd/schema/azure.yaml.json
+
 name: todo-nodejs-mongo-aca
 services:
-  - name: ${AZURE_ENV_NAME}api
-    project: src/api
-    language: js
-    host: containerapp
-  - name: ${AZURE_ENV_NAME}web
+  web:
     project: src/web
-    dist: build
-    language: js
+    language: csharp
     host: appservice
+  api:
+    project: src/api
+    language: csharp
+    host: containerapp
+  

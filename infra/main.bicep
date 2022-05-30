@@ -27,11 +27,10 @@ module resources './resources.bicep' = {
   }
 }
 
-output AZURE_COSMOS_CONNECTION_STRING_KEY string = resources.outputs.AZURE_COSMOS_CONNECTION_STRING_KEY
 output AZURE_COSMOS_DATABASE_NAME string = resources.outputs.AZURE_COSMOS_DATABASE_NAME
-output AZURE_KEY_VAULT_ENDPOINT string = resources.outputs.AZURE_KEY_VAULT_ENDPOINT
 output APPINSIGHTS_INSTRUMENTATIONKEY string = resources.outputs.APPINSIGHTS_INSTRUMENTATIONKEY
-output REACT_APP_API_BASE_URL string = resources.outputs.API_URI
+output API_BASE_URL string = resources.outputs.API_URI
+output REACT_APP_API_BASE_URL string = resources.outputs.WEB_URI
 output REACT_APP_APPINSIGHTS_INSTRUMENTATIONKEY string = resources.outputs.APPINSIGHTS_INSTRUMENTATIONKEY
 output AZURE_LOCATION string = location
 output AZURE_CONTAINER_REGISTRY_NAME string = resources.outputs.AZURE_CONTAINER_REGISTRY_NAME
