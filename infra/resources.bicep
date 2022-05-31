@@ -3,10 +3,111 @@ param location string
 param principalId string = ''
 param apiImageName string = ''
 
+resource virtualNetwork 'Microsoft.Network/virtualNetworks@2020-11-01' = {
+  name: '${name}vnet'
+  location: location
+  properties: {
+    addressSpace: {
+      addressPrefixes: [
+        '10.0.0.0/16'
+      ]
+    }
+    dhcpOptions: {
+      dnsServers: []
+    }
+    subnets: [
+      {
+        name: 'controlplane'
+        properties: {
+          addressPrefix: '10.0.0.0/21'
+          delegations: []
+          privateEndpointNetworkPolicies: 'Enabled'
+          privateLinkServiceNetworkPolicies: 'Enabled'
+        }
+      }
+      {
+        name: 'applications'
+        properties: {
+          addressPrefix: '10.0.8.0/21'
+          delegations: []
+          privateEndpointNetworkPolicies: 'Enabled'
+          privateLinkServiceNetworkPolicies: 'Enabled'
+        }
+      }
+      {
+        name: 'webapp'
+        properties: {
+          addressPrefix: '10.0.16.0/21'
+          delegations: [
+            {
+              name: 'delegation'
+              properties: {
+                serviceName: 'Microsoft.Web/serverfarms'
+              }
+            }
+          ]
+          privateEndpointNetworkPolicies: 'Enabled'
+          privateLinkServiceNetworkPolicies: 'Enabled'
+        }
+      }
+    ]
+    virtualNetworkPeerings: []
+    enableDdosProtection: false
+  }
+}
+
+resource webappSubnet 'Microsoft.Network/virtualNetworks/subnets@2020-11-01' = {
+  parent: virtualNetwork
+  name: 'webapp'
+  properties: {
+    addressPrefix: '10.0.16.0/21'
+    delegations: [
+      {
+        name: 'delegation'
+        properties: {
+          serviceName: 'Microsoft.Web/serverfarms'
+        }
+      }
+    ]
+    privateEndpointNetworkPolicies: 'Enabled'
+    privateLinkServiceNetworkPolicies: 'Enabled'
+  }
+}
+
+resource applicationSubnet 'Microsoft.Network/virtualNetworks/subnets@2020-11-01' = {
+  parent: virtualNetwork
+  name: 'applications'
+  properties: {
+    addressPrefix: '10.0.8.0/21'
+    delegations: []
+    privateEndpointNetworkPolicies: 'Enabled'
+    privateLinkServiceNetworkPolicies: 'Enabled'
+  }
+}
+
+resource controlPlaneSubnet 'Microsoft.Network/virtualNetworks/subnets@2020-11-01' = {
+  parent: virtualNetwork
+  name: 'controlplane'
+  properties: {
+    addressPrefix: '10.0.0.0/21'
+    delegations: []
+    privateEndpointNetworkPolicies: 'Enabled'
+    privateLinkServiceNetworkPolicies: 'Enabled'
+  }
+}
+
 resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2022-01-01-preview' = {
   name: '${name}acaenv'
   location: location
   properties: {
+    vnetConfiguration: {
+      internal: true
+      infrastructureSubnetId: controlPlaneSubnet.id
+      runtimeSubnetId: applicationSubnet.id
+      dockerBridgeCidr: '10.2.0.1/16'
+      platformReservedCidr: '10.1.0.0/16'
+      platformReservedDnsIP: '10.1.0.2'
+    }
     appLogsConfiguration: {
       destination: 'log-analytics'
       logAnalyticsConfiguration: {
@@ -36,6 +137,16 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2021-12-01-pr
   }
 }
 
+module privateDnsResources './privatedns.bicep' = {
+  name: '${name}privateDns'
+  params: {
+    privateDnsZoneName: containerAppsEnvironment.properties.defaultDomain
+    containerEnvStaticIp: containerAppsEnvironment.properties.staticIp
+    vnetName: virtualNetwork.name
+    vnetId: virtualNetwork.id
+  }
+}
+
 module api './api.bicep' = {
   name: '${name}api'
   params: {
@@ -59,6 +170,26 @@ resource appServicePlan 'Microsoft.Web/serverFarms@2020-06-01' = {
   }
 }
 
+resource webappVNetConnection 'Microsoft.Web/sites/virtualNetworkConnections@2021-03-01' = {
+  parent: web
+  name: '${name}webappvnetconnection'
+  location: location
+  properties: {
+    vnetResourceId: webappSubnet.id
+    isSwift: true
+  }
+}
+
+resource webConfig 'Microsoft.Web/sites/config@2021-03-01' = {
+  parent: web
+  name: 'web'
+  location: location
+  properties: {
+    vnetName: webappVNetConnection.name
+    vnetRouteAllEnabled: true
+  }
+}
+
 resource web 'Microsoft.Web/sites@2021-01-15' = {
   name: '${name}web'
   location: location
@@ -70,6 +201,7 @@ resource web 'Microsoft.Web/sites@2021-01-15' = {
       ftpsState: 'FtpsOnly'
     }
     httpsOnly: true
+    virtualNetworkSubnetId: webappSubnet.id
   }
 
   resource appSettings 'config' = {
