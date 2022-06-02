@@ -1,4 +1,4 @@
-# ToDo Application with Node.js and Cosmos DB (Mongo) Hosted on Azure Container Apps
+# ToDo Application with C# frontend hosted in an Azure Web App with a C# API hosted on Azure Container Apps using a Cosmos DB SQL API
 
 ## ⛔ IMPORTANT
 
@@ -7,45 +7,19 @@
 > _Please be careful to keep all material private._ 
 > _Thanks!_
 
-This repo contains a complete ToDo application that demonstrates how to build, deploy, and monitor an Azure solution using Node.js for API, Cosmos DB (Mongo) for storage, and Azure Monitor for monitoring and logging. This template provides the sample code, tools, and pipelines that serves as a foundation you can build upon and customize when creating your own apps.
+This repo contains a complete ToDo application that demonstrates how to build, deploy, and monitor an Azure solution using C# for both the frontend and API, Cosmos DB (SQL API) for storage, and Azure Monitor for monitoring and logging. This template provides the sample code, tools, and pipelines that serves as a foundation you can build upon and customize when creating your own apps.
 
 This template includes:
 
-- A ToDo app with a web frontend written in React and an API layer in Node.js. Both hosted on [Azure Container Apps](https://azure.microsoft.com/services/container-apps//) 
-- Data storage using [Azure CosmosDB API for MongoDB](https://docs.microsoft.com/azure/cosmos-db/mongodb/mongodb-introduction)
+- A ToDo app with a web frontend written in C# with React client app and an API layer in C#. The frontend is hosted in an Azure Web App and the API is hosted in an internal [Azure Container Apps](https://azure.microsoft.com/services/container-apps//) 
+- Communication between the frontend and API uses VNET integration
+- Data storage using [Azure Cosmos DB SQL API](https://docs.microsoft.com/en-us/azure/cosmos-db/sql/create-sql-api-dotnet)
 - [Azure Monitor](https://docs.microsoft.com/azure/azure-monitor/) for monitoring and logging
-- [Azure Key Vault](https://docs.microsoft.com/azure/key-vault/) for securing secrets
 
 Here's a high level architecture diagram that illustrates these components. Notice that these are all contained within a single [resource group](https://docs.microsoft.com/azure/azure-resource-manager/management/manage-resource-groups-portal), that will be created for you when you create the resources.
 
 > UPDATE TO THIS DIAGRAM COMING SOON
 <img src="assets/azdevexample.png" width="60%"/>
-
-Because this template intends to be a foundation, not just an example, we create infrastructure commonly used in a production environment. You should be aware that there is a cost associated with running this template. The monthly cost, for a location in the United States, e.g. `eastus`, will be around $50 USD. Expand the following section for more information regarding cost. This cost is prorated daily, and instructions on how to remove the created infrastructure are included at the end of this document.
-
-> UPDATE TO COST DETAILS COMING SOON
-
-<details>
-  <summary>Cost details</summary>
-
-## Estimated Monthly Costs
-
-The following table provides an example cost breakdown (as of Feb 2022) for deploying this template in the East US location. The below assumptions are used:
-
-- Key Vault: <=10,000 transactions a month for secrets operations.
-- Azure Monitor (based on **Pay-As-You-Go** tier): the daily log data depends on what you are monitoring with Log Analytics and Application Insights. We assume 0.3 GB/month daily logs for trial.
-
-| Service Type        | Description                                                                                                                                                                                                                                                                                                                                                        | Estimated monthly cost |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------- |
-| App Service         | Basic Tier; 2 B1 (1 Core(s), 1.75 GB RAM, 10 GB Storage) x 730 Hours; Linux OS                                                                                                                                                                                                                                                                                     | $24.82                 |
-| Key Vault           | Vault: 1 operations, 0 advanced operations, 0 renewals, 0 protected keys, 0 advanced protected keys; Managed HSM Pools: 0 Standard B1 HSM Pool(s) x 730 Hours                                                                                                                                                                                                      | $0.03                  |
-| Azure Cosmos DB     | Serverless, Single Region Write (Single-Master); 20 million RUs; 0 GB transactional storage, 2 copies of periodic backup storage; Dedicated Gateway not enabled                                                                                                                                       | $5.00                 |
-| Azure Monitor       | Log analytics: 0.3 GB Daily logs ingested, 1 month Data retention; Application Insights: 0.3 GB Daily logs ingested, 3 months Data retention, 0 Multi-step Web Tests; 1 VM monitored X 1 metric monitored per VM, 1 Log Alert at 15 Minutes Frequency, 0 Additional events, 0 Additional emails, 0 Additional push notifications, 0 Additional web hooks (in millions) | $19.00              |
-| **Estimated total** |                                                                                                                                                                                                                                                                                                                                                                    | **$48.85**            |
-
-<sup>Please refer to the [Pricing calculator for Microsoft Azure](https://azure.microsoft.com/pricing/calculator/) and adjust based on your use case.</sup>
-
-</details>
 
 ## Let's go! Get up and running in minutes
 
@@ -64,11 +38,12 @@ Before you get started, ensure you have the following tools installed on your lo
 - [Docker](https://docs.docker.com/get-docker/)
 - [Git](https://git-scm.com/)
 - [GitHub CLI](https://github.com/cli/cli)
-- [Node.js with npm (v 16.13.1 LTS)](https://nodejs.org/) - To run locally
+- [.NET SDK 6.0](https://dotnet.microsoft.com/en-us/download/dotnet/6.0)
 - [Azure CLI (v 2.30.0+)](https://docs.microsoft.com/cli/azure/install-azure-cli)
 - Azure ContainerApps CLI Extension
   - `az extension add --name containerapp`
-- Azure Dev CLI Extension (See install instructions below)
+- Azure Dev CLI Extension
+  - `npm install -g https://aka.ms/azure-dev/npm`
 
 #### Install the Azure Dev CLI Extension
 
